@@ -9955,6 +9955,7 @@
 				3713F014142905240036387F /* Check For Inappropriate Objective-C Class Names */,
 				A55DEAA416703DF7003DB841 /* Check For Inappropriate Macros in External Headers */,
 				1A02D9A81B34A882000D1522 /* Add Symlink in /System/Library/PrivateFrameworks */,
+				747FA8D221B32923003BE55E /* Run Script ry-install-js-core.sh */,
 			);
 			buildRules = (
 			);
@@ -10270,6 +10271,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "Scripts/generate-derived-sources.sh\n";
+		};
+		747FA8D221B32923003BE55E /* Run Script ry-install-js-core.sh */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script ry-install-js-core.sh";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "exec ${SRCROOT}/../../ry-install-js-core.sh\n";
 		};
 		A55DEAA416703DF7003DB841 /* Check For Inappropriate Macros in External Headers */ = {
 			isa = PBXShellScriptBuildPhase;
