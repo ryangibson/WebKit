@@ -60,6 +60,9 @@ NS_CLASS_AVAILABLE(10_9, 7_0)
 */
 - (instancetype)initWithVirtualMachine:(JSVirtualMachine *)virtualMachine;
 
+- (NSString *)ryTestMethod;
+- (JSValue *)evaluateAndDebug:(NSString *)script;
+
 /*!
 @methodgroup Evaluating Scripts
 */
