@@ -53,6 +53,8 @@
 #include <wtf/text/StringHash.h>
 
 #include "Debugger.h"
+#include "Parser.h"
+#include "ParserError.h"
 #import <objc/runtime.h>
 #include <iostream>
 
@@ -64,6 +66,8 @@ using namespace JSC;
 using namespace std;
 
 class Debugger;
+//class Parser;
+//class ParserError;
 
 class JS_EXPORT_PRIVATE RPGDebugger : public Debugger {
 public:
@@ -77,6 +81,9 @@ protected:
     void handleExceptionInBreakpointCondition(ExecState*, Exception*) const;
     void handlePause(JSGlobalObject*, ReasonForPause);
     void notifyDoneProcessingDebuggerEvents();
+
+private:
+    void pause();
 };
 
 RPGDebugger::RPGDebugger(VM& vm) : Debugger(vm) {
@@ -160,8 +167,11 @@ void RPGDebugger::handlePause(JSGlobalObject *globalObject, ReasonForPause reaso
 //    pthread_mutex_lock(&l);
 //    pthread_mutex_lock(&l);
 //
-    Inspector::EventLoop loop;
+    this->pause();
+}
 
+void RPGDebugger::pause() {
+    Inspector::EventLoop loop;
     CFRunLoopSourceContext context = {
         0, // CFIndex    version;
         nullptr, // void *    info;
@@ -177,8 +187,8 @@ void RPGDebugger::handlePause(JSGlobalObject *globalObject, ReasonForPause reaso
     CFRunLoopSourceRef source = CFRunLoopSourceCreate(NULL, 0, &context);
     CFRunLoopAddSource(CFRunLoopGetCurrent(), source, loop.remoteInspectorRunLoopMode());
 
-//    while (true && !loop.ended())
-//        loop.cycle();
+    while (true && !loop.ended())
+        loop.cycle();
 }
 
 void RPGDebugger::notifyDoneProcessingDebuggerEvents() {
@@ -186,6 +196,108 @@ void RPGDebugger::notifyDoneProcessingDebuggerEvents() {
 }
 
 };
+
+@implementation JSDebugger {
+    JSGlobalContextRef m_context;
+    JSC::RPGDebugger *m_debugger;
+}
+
+- (instancetype)initWithContext:(JSGlobalContextRef)ctx
+{
+    self = [super init];
+    if (self) {
+        m_context = ctx;
+        JSC::ExecState* exec = toJS(m_context);
+        JSC::VM& vm = exec->vm();
+        m_debugger = new JSC::RPGDebugger(vm);
+    }
+    return self;
+}
+
+- (void)attach
+{
+    NSLog(@"JSDebugger.attach");
+    JSC::JSGlobalObject* globalObject = toJS(m_context)->lexicalGlobalObject();
+    m_debugger->attach(globalObject);
+
+}
+
+- (void)detach
+{
+    NSLog(@"JSDebugger.dettach");
+    JSC::JSGlobalObject* globalObject = toJS(m_context)->lexicalGlobalObject();
+    m_debugger->detach(globalObject, JSC::RPGDebugger::TerminatingDebuggingSession);
+}
+
+- (void)addBreakPoint:(NSUInteger)line
+{
+    NSLog(@"JSDebugger.addBreakPoint %lu", line);
+}
+
+- (void)removeBreakPoint:(NSUInteger)line
+{
+    NSLog(@"JSDebugger.removeBreakPoint %lu", line);
+}
+
+- (void)enableBreakPoint:(NSUInteger)line
+{
+    NSLog(@"JSDebugger.enableBreakPoint %lu", line);
+}
+
+- (void)disableBreakPoint:(NSUInteger)line
+{
+    NSLog(@"JSDebugger.disableBreakPoint %lu", line);
+}
+
+- (void)pause
+{
+    NSLog(@"JSDebugger.pause");
+}
+
+- (void)resume
+{
+    NSLog(@"JSDebugger.resume");
+}
+
+- (void)stepOver
+{
+    NSLog(@"JSDebugger.stepOver");
+}
+
+- (void)stepInto
+{
+    NSLog(@"JSDebugger.stepInto");
+}
+
+- (void)stepOut
+{
+    NSLog(@"JSDebugger.stepOut");
+}
+
+- (NSArray<JSDebugFrame *> *)frames
+{
+    NSLog(@"JSDebugger.frames");
+    return @[];
+}
+
+- (void)selectFrameAtIndex:(NSUInteger)index
+{
+    NSLog(@"JSDebugger.selectFrameAtIndex %lu", (unsigned long)index);
+}
+
+@end
+
+@implementation JSDebugFrame {
+
+}
+
+- (NSDictionary<NSString *, JSValue *> *)variables
+{
+    NSLog(@"JSDebugFrame.variables");
+    return @{};
+}
+
+@end
 
 @implementation JSContext {
     JSVirtualMachine *m_virtualMachine;
@@ -251,9 +363,62 @@ void RPGDebugger::notifyDoneProcessingDebuggerEvents() {
 //    JSC::Debugger::attach(globalObject);
     m_debugger->attach(globalObject);
 //    m_debugger->activateBreakpoints();
-
     return @"THIS IS RYAN'S TEST METHOD RESULT (NEW 2)";
 }
+
+- (void)parseJavaScript:(NSString *)script
+{
+    NSLog(@"> %@", script);
+}
+/*
+- (void)_parseJavaScript:(JSStringRef)script
+               sourceURL:(JSStringRef)sourceURL
+      startingLineNumber:(int)startingLineNumber
+{
+    JSC::ExecState* exec = toJS(m_context);
+    JSC::VM& vm = exec->vm();
+
+    //JSC::JSGlobalObject* globalObject = vm.vmEntryGlobalObject(exec);
+    auto sourceURLString = sourceURL ? sourceURL->string() : String();
+    JSC::SourceCode source = makeSource(script->string(), JSC::SourceOrigin { sourceURLString }, sourceURLString, TextPosition(OrdinalNumber::fromOneBasedInt(startingLineNumber), OrdinalNumber()));
+    JSC::ParserError error;
+
+
+    JSC::Parser<JSC::Lexer<LChar>> parser(
+        &vm,
+        source,
+        JSC::JSParserBuiltinMode::NotBuiltin,
+        JSC::JSParserStrictMode::NotStrict,
+        JSC::JSParserScriptMode::Classic,
+        JSC::SourceParseMode::ProgramMode,
+        JSC::SuperBinding::NotNeeded,
+        JSC::ConstructorKind::None,
+        JSC::DerivedContextType::None,
+        false,
+        JSC::EvalContextType::None,
+        nullptr
+    );
+    auto rootNode = parser.parse(&error, JSC::Identifier(), JSC::JSParserScriptMode::Classic, JSC::ParsingContext::Program);
+    */
+/*
+    std::unique_ptr<JSC::ProgramNode> rootNode = parser.parse(
+        vm,
+        source,
+        JSC::Identifier(),
+        JSC::JSParserBuiltinMode::NotBuiltin,
+        JSC::JSParserStrictMode::NotStrict,
+        JSC::JSParserScriptMode::Classic,
+        JSC::SourceParseMode::ProgramMode,
+        JSC::SuperBinding::NotNeeded,
+        &error,
+        nullptr,
+        JSC::ConstructorKind::None,
+        JSC::DerivedContextType::None,
+        JSC::EvalContextType::None,
+        nullptr
+    );
+ */
+//}
 
 - (JSValue *)evaluateAndDebug:(NSString *)script
 {

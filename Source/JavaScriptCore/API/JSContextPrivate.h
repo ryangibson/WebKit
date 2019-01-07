@@ -54,4 +54,10 @@
 
 #endif
 
+@interface JSDebugFrame(Private)
+@end
+
+@interface JSDebugger(Private)
+@end
+
 #endif // JSContextInternal_h

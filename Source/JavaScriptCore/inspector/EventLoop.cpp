@@ -26,6 +26,8 @@
 #include "config.h"
 #include "EventLoop.h"
 
+#include <iostream>
+
 #if OS(WINDOWS)
 #include <windows.h>
 #elif USE(GLIB)
@@ -63,8 +65,22 @@ void EventLoop::cycle()
     // nested. Only the debugger should control things until we continue.
     // FIXME: This is not a perfect solution, as background threads are not
     // paused and can still access and evalute script in the JSContext.
-    CFTimeInterval timeInterval = 0.05;
-    CFRunLoopRunInMode(remoteInspectorRunLoopMode(), timeInterval, true);
+    CFTimeInterval timeInterval = 0.1; //0.05;
+    CFRunLoopRunResult runLoopResult = CFRunLoopRunInMode(remoteInspectorRunLoopMode(), timeInterval, true);
+    switch (runLoopResult) {
+        case kCFRunLoopRunFinished:
+            std::cout << "kCFRunLoopRunFinished" << std::endl;
+            break;
+        case kCFRunLoopRunHandledSource:
+            std::cout << "kCFRunLoopRunHandledSource" << std::endl;
+            break;
+        case kCFRunLoopRunStopped:
+            std::cout << "kCFRunLoopRunStopped:" << std::endl;
+            break;
+        case kCFRunLoopRunTimedOut:
+            std::cout << "kCFRunLoopRunTimedOut" << std::endl;
+            break;
+    }
 #elif USE(GLIB)
     g_main_context_iteration(NULL, FALSE);
 #endif

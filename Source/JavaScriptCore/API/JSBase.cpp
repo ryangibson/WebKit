@@ -45,6 +45,8 @@
 #include "JSGlobalObjectInspectorController.h"
 #endif
 
+#include <iostream>
+
 using namespace JSC;
 
 JSValueRef JSEvaluateScript(JSContextRef ctx, JSStringRef script, JSObjectRef thisObject, JSStringRef sourceURL, int startingLineNumber, JSValueRef* exception)
@@ -66,6 +68,8 @@ JSValueRef JSEvaluateScript(JSContextRef ctx, JSStringRef script, JSObjectRef th
     auto sourceURLString = sourceURL ? sourceURL->string() : String();
     SourceCode source = makeSource(script->string(), SourceOrigin { sourceURLString }, sourceURLString, TextPosition(OrdinalNumber::fromOneBasedInt(startingLineNumber), OrdinalNumber()));
 
+    std::cout << "RPG.EvaluateScript.SourceID: " << source.provider()->asID() << std::endl;
+
     NakedPtr<Exception> evaluationException;
     JSValue returnValue = profiledEvaluate(globalObject->globalExec(), ProfilingReason::API, source, jsThisObject, evaluationException);
 
@@ -78,7 +82,10 @@ JSValueRef JSEvaluateScript(JSContextRef ctx, JSStringRef script, JSObjectRef th
         // Debugger path is currently ignored by inspector.
         // NOTE: If we don't have a debugger, this SourceCode will be forever lost to the inspector.
         // We could stash it in the inspector in case an inspector is ever opened.
+        std::cout << "REMOTE_INSPECTOR.ENABLED" << std::endl;
         globalObject->inspectorController().reportAPIException(exec, evaluationException);
+#else
+        std::cout << "REMOTE_INSPECTOR.DISABLED" << std::endl;
 #endif
         return 0;
     }
@@ -104,7 +111,8 @@ bool JSCheckScriptSyntax(JSContextRef ctx, JSStringRef script, JSStringRef sourc
 
     auto sourceURLString = sourceURL ? sourceURL->string() : String();
     SourceCode source = makeSource(script->string(), SourceOrigin { sourceURLString }, sourceURLString, TextPosition(OrdinalNumber::fromOneBasedInt(startingLineNumber), OrdinalNumber()));
-    
+    std::cout << "RPG.CheckSyntax.SourceID: " << source.provider()->asID() << std::endl;
+
     JSValue syntaxException;
     bool isValidSyntax = checkSyntax(vm.vmEntryGlobalObject(exec)->globalExec(), source, &syntaxException);
 

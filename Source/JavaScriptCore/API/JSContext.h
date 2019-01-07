@@ -238,4 +238,32 @@ NS_CLASS_AVAILABLE(10_9, 7_0)
 
 #endif
 
+@interface JSDebugFrame : NSObject
+
+@property (readonly) NSDictionary<NSString *, JSValue *> *variables;
+
+@end
+
+@interface JSDebugger : NSObject
+
+- (void)attach;
+- (void)detach;
+
+- (void)addBreakPoint:(NSUInteger)line;
+- (void)removeBreakPoint:(NSUInteger)line;
+- (void)enableBreakPoint:(NSUInteger)line;
+- (void)disableBreakPoint:(NSUInteger)line;
+
+- (void)pause;
+- (void)resume;
+
+- (void)stepOver;
+- (void)stepInto;
+- (void)stepOut;
+
+- (NSArray<JSDebugFrame *> *)frames;
+- (void)selectFrameAtIndex:(NSUInteger)index;
+
+@end
+
 #endif // JSContext_h
